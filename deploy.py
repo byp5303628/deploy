@@ -11,22 +11,48 @@ HOME_DIR = os.getcwd()
 CORE_DIR = HOME_DIR + "/trunk/web/service"
 WEBAPP_DIR = HOME_DIR + "/trunk/web/webapp"
 
-DEPLOY_DICT = {
-	"portal" : "as-portal-webapp",
-	"ROOT" : "as-www-webapp",
-	"upload" : "as-upload-webapp"
-}
-DEPENDENCY_LIST = ["as-core-service",]
-
+global DEPLOY_DICT 
+global DEPENDENCY_LIST
 global revision
+global branch
 
 def log(s):
 	time = str(datetime.datetime.now())
 	print "%s : %s" % (time, s)
 
+def set_branch(name):
+	global branch
+	if name == "trunk":
+		branch = name
+	else:
+		branch = "branches/%s" % name
+
+def init():
+	global DEPLOY_DICT, DEPENDENCY_LIST
+	log("Begin to load setting.yaml")
+	filename = "%s/setting.yaml" % HOME_DIR
+	if not os.path.exists(filename):
+		filename = "~/setting.yaml"
+	if not os.path.exists(filename):
+		log("Init Error: setting.yaml file does not exist. Please check your home or current path.")
+		return False
+	
+	log("File Path : " + filename)
+	file = open(filename, "r")
+	import yaml
+	temp = yaml.load(file)
+	DEPLOY_DICT = temp["DEPLOY_DICT"]
+	DEPENDENCY_LIST = temp["DEPENDENCY_LIST"]
+
+	log("DEPLOY_DICT : " + str(DEPLOY_DICT))
+	log("DEPENDENCY_LIST: " + str(DEPENDENCY_LIST))
+
+	file.close()
+	return True
+
 def _check_out_revision():
 	log("Revision is %s" % str(revision))
-	os.system("svn checkout http://svn.artisanstate.com/svn/as2/trunk -r %s > 1.log" % str(revision))
+	os.system("svn checkout http://svn.artisanstate.com/svn/as2/%s -r %s > 1.log" % (branch, str(revision)))
 	is_svn_checkout_failed = commands.getoutput("cat 1.log | grep 'Checked out revision'") == ""
 
 	if is_svn_checkout_failed:
@@ -94,6 +120,11 @@ def process():
 	
 
 if __name__ == "__main__":
+	"""
+	First argv is revision, second is branch name.
+	"""
+	init()
 	global revision
 	revision = sys.argv[1]
+	set_branch(sys.argv[2])
 	process()

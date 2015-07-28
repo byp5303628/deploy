@@ -1,0 +1,11 @@
+DEPLOY_DICT:
+    portal: as-portal-webapp
+    ROOT: as-www-webapp
+    upload: as-upload-webapp
+
+DEPENDENCY_LIST:
+    - as-core-service
+    - as-ep-common-web
+    - as-ep-core-service
+    - as-marketplace-service
+
